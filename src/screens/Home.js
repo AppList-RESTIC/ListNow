@@ -1,28 +1,75 @@
-import { StatusBar } from 'expo-status-bar';
-import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { AntDesign } from '@expo/vector-icons'; // Pacote de ícones do Expo
+import React, { useContext, useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage
+import { AntDesign } from '@expo/vector-icons';
 import { AuthContext } from "../contexts/auth";
+import { TaskItem } from '../components/TaskItem'; 
 import { TextInput } from 'react-native-gesture-handler';
 
 export function Home() {
   const { user, logout } = useContext(AuthContext);
-
-  // Definir estado para controlar o valor do TextInput
+  
+  // Estado para controlar a lista de tarefas
+  const [tasks, setTasks] = useState([]);
   const [text, setText] = useState('');
 
-  function sair() {
-    logout();
+  // Função para carregar tarefas do armazenamento local
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        const savedTasks = await AsyncStorage.getItem(`tasks_${user?.email}`);
+        if (savedTasks) {
+          setTasks(JSON.parse(savedTasks));
+        }
+      } catch (error) {
+        Alert.alert('Erro ao carregar tarefas');
+      }
+    }
+
+    loadTasks();
+  }, []);
+
+  // Função para salvar tarefas no armazenamento local
+  useEffect(() => {
+    async function saveTasks() {
+      try {
+        await AsyncStorage.setItem(`tasks_${user?.email}`, JSON.stringify(tasks));
+      } catch (error) {
+        Alert.alert('Erro ao salvar tarefas');
+      }
+    }
+
+    if (tasks.length > 0) {
+      saveTasks();
+    }
+  }, [tasks]);
+
+  // Função para adicionar nova tarefa
+  function addTask() {
+    if (text) {
+      setTasks([...tasks, { id: Date.now().toString(), text, isFavorite: false }]);
+      setText(''); // Limpa o input
+    }
+  }
+
+  // Função para marcar como favorito
+  function handleFavorite(id) {
+    setTasks(tasks.map(task => 
+      task.id === id ? { ...task, isFavorite: !task.isFavorite } : task
+    ));
+  }
+
+  // Função para deletar tarefa
+  function handleDelete(id) {
+    setTasks(tasks.filter(task => task.id !== id));
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
       <View style={styles.WelcomeView}>
-        <Text style={styles.titleLargue}>Seja bem-vindo, </Text>
-        <Text style={styles.titleLargue}>{user?.email}!</Text>
+        <Text style={styles.titleLargue}>Seja bem-vindo, {user?.email}!</Text>
 
-        {/* View para o input com o ícone de lupa */}
+        {/* Input com lupa */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -31,17 +78,27 @@ export function Home() {
             placeholder="Digite aqui"
             placeholderTextColor="#aaa"
           />
-          <TouchableOpacity style={styles.iconContainer}>
-            <AntDesign name="search1" size={20} color="#aaa" />
+          <TouchableOpacity style={styles.iconContainer} onPress={addTask}>
+            <AntDesign name="pluscircle" size={24} color="#292929" />
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* Lista de tarefas */}
       <View style={styles.menuTasks}>
         <Text style={styles.titleMedium}>Tasks do Dia</Text>
-        <TouchableOpacity style={styles.btnFlutuanteAdd}>
-          +
-        </TouchableOpacity>
+        
+        <FlatList
+          data={tasks}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TaskItem 
+              task={item} 
+              onFavorite={handleFavorite} 
+              onDelete={handleDelete} 
+            />
+          )}
+        />
       </View>
     </View>
   );
@@ -62,25 +119,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
     padding: 32,
-  },
-  btnFlutuanteAdd: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    backgroundColor: '#292929',
-    color: 'white',
-    fontSize: 32,
-    fontWeight: 'bold',
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    right: 20,
-    bottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
   WelcomeView: {
     marginTop: 80,
@@ -115,12 +153,5 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     padding: 8,
-  },
-  btSair: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 24,
-    backgroundColor: '#86a6df',
   },
 });
