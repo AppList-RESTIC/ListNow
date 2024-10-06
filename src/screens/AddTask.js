@@ -2,19 +2,19 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../contexts/auth';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export function AddTask({ navigation }) {
   const { user } = useContext(AuthContext);
 
-  // Estados para armazenar os valores da tarefa
   const [taskName, setTaskName] = useState('');
   const [taskDate, setTaskDate] = useState('');
   const [taskDetails, setTaskDetails] = useState('');
+  const [isNotified, setIsNotified] = useState(false); // Estado para a notificação
+  const [selectedCategory, setSelectedCategory] = useState(null); // Estado para categoria selecionada
 
-  // Função para adicionar a nova tarefa
   async function handleAddTask() {
-    if (!taskName || !taskDate || !taskDetails) {
+    if (!taskName || !taskDate || !taskDetails || !selectedCategory) {
       Alert.alert('Por favor, preencha todos os campos');
       return;
     }
@@ -28,7 +28,9 @@ export function AddTask({ navigation }) {
         name: taskName,
         date: taskDate,
         details: taskDetails,
-        status: 'open', // Status inicial é em aberto
+        category: selectedCategory,
+        isNotified, // Adiciona o estado de notificação
+        status: 'open',
         isFavorite: false,
       };
 
@@ -36,42 +38,47 @@ export function AddTask({ navigation }) {
       await AsyncStorage.setItem(`tasks_${user?.email}`, JSON.stringify(updatedTasks));
 
       Alert.alert('Tarefa adicionada com sucesso');
-
-      // Passando a nova tarefa de volta para a Home
       navigation.navigate('Home', { newTask });
     } catch (error) {
       Alert.alert('Erro ao adicionar a tarefa');
     }
   }
 
-  // Função para formatar a entrada de data
   const handleDateChange = (text) => {
     const formattedDate = text
-      .replace(/\D/g, '') // Remove tudo que não é dígito
-      .replace(/(\d{2})(\d)/, '$1/$2') // Adiciona a primeira barra após o dia
-      .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3'); // Adiciona a barra após o mês
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(\d)/, '$1/$2')
+      .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
 
     setTaskDate(formattedDate);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.Title}>Criar Tarefa</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <AntDesign name="arrowleft" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Criar Tarefa</Text>
+      </View>
+
       <Text style={styles.label}>Nome da Tarefa</Text>
       <TextInput
         style={styles.input}
         value={taskName}
         onChangeText={setTaskName}
-        placeholder="Digite o nome da tarefa"
+        placeholder="Ex: Jogar Bola"
+        placeholderTextColor="#888"
       />
 
-      <Text style={styles.label}>Data (DD/MM/YYYY)</Text>
+      <Text style={styles.label}>Definir Data</Text>
       <TextInput
         style={styles.input}
         value={taskDate}
-        onChangeText={handleDateChange} // Usa a função de formatação
-        placeholder="Digite a data da tarefa"
-        keyboardType="numeric" // Permite apenas números
+        onChangeText={handleDateChange}
+        placeholder="30/07/2024"
+        keyboardType="numeric"
+        placeholderTextColor="#888"
       />
 
       <Text style={styles.label}>Detalhes</Text>
@@ -79,18 +86,59 @@ export function AddTask({ navigation }) {
         style={styles.input}
         value={taskDetails}
         onChangeText={setTaskDetails}
-        placeholder="Digite os detalhes da tarefa"
+        placeholder="Ex: Vamos estar jogando pela tarde"
+        placeholderTextColor="#888"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleAddTask}>
-        <AntDesign name="checkcircle" size={24} color="white" />
-        <Text style={styles.buttonText}>Adicionar</Text>
+      <Text style={styles.label}>Categorias:</Text>
+      <View style={styles.categoriesContainer}>
+        <TouchableOpacity
+          style={[
+            styles.categoryButton,
+            selectedCategory === 'esporte' && styles.selectedCategory,
+          ]}
+          onPress={() => setSelectedCategory('esporte')}
+        >
+          <MaterialCommunityIcons name="weight-lifter" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.categoryButton,
+            selectedCategory === 'social' && styles.selectedCategory,
+          ]}
+          onPress={() => setSelectedCategory('social')}
+        >
+          <AntDesign name="user" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.categoryButton,
+            selectedCategory === 'evento' && styles.selectedCategory,
+          ]}
+          onPress={() => setSelectedCategory('evento')}
+        >
+          <MaterialCommunityIcons name="calendar" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.categoryButton,
+            selectedCategory === 'outros' && styles.selectedCategory,
+          ]}
+          onPress={() => setSelectedCategory('outros')}
+        >
+          <AntDesign name="ellipsis1" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+        <View style={styles.noficacaoDiv} >
+      <Text style={styles.label}>Notificação:</Text>
+      <TouchableOpacity style={styles.notificationButton} onPress={() => setIsNotified(!isNotified)}>
+        {isNotified && <MaterialCommunityIcons name="check" size={20} color="white" />}
       </TouchableOpacity>
+      </View>
+      
 
-      {/* Botão para voltar */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <AntDesign name="arrowleft" size={24} color="white" />
-        <Text style={styles.buttonText}>Voltar</Text>
+      <TouchableOpacity style={styles.button} onPress={handleAddTask}>
+        <Text style={styles.buttonText}>Adicionar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -102,8 +150,17 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#292929',
   },
-  Title: {
-    marginTop: 40,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  backButton: {
+    marginRight: 10,
+  },
+  title: {
+    flex: 1,
     textAlign: 'center',
     fontSize: 24,
     color: '#fff',
@@ -113,36 +170,58 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 10,
   },
+  noficacaoDiv:{
+    display:'flex',
+    justifyContent: 'center',
+    alignItems:'center'
+  },
   input: {
     backgroundColor: '#fff',
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
   },
-  button: {
+  categoriesContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  categoryButton: {
+    backgroundColor: '#4A4A4A',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedCategory: {
+    backgroundColor: '#ECE653',
+  },
+  notificationButton: {
+    backgroundColor: '#4A4A4A',
+    width: 40,
+    height: 40,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+  },
+  button: {
     backgroundColor: '#ECE653',
     padding: 15,
     borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
   },
   buttonText: {
     color: 'black',
     fontSize: 18,
-    marginLeft: 10,
-  },
-  backButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-    backgroundColor: '#FF6347',
-    padding: 15,
-    borderRadius: 5,
   },
 });
+
+
+
 
 
 // //NOVO (Quebrado)

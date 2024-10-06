@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     color: "#ffff",
     fontSize: 32,
     fontWeight: "bold",
+    marginTop: '15%',
     marginBottom: 32,
     paddingHorizontal: 32,
     textAlign: "center",

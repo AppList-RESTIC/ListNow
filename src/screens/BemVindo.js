@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         width: '90%',
+        maxWidth: '100%',
         marginBottom: 20,
         marginTop: 46,
         color: 'white',
