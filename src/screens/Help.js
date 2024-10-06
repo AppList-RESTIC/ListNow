@@ -63,7 +63,7 @@ export function Help() {
           {/* Botões de ação */}
           <View style={styles.buttons}>
             <TouchableOpacity onPress={() => setFeedbackModalVisible(true)}>
-              <AntDesign name="like2" size={32} color="green" />
+              <AntDesign name="like2" size={32} color="#000" />
             </TouchableOpacity>
             <View style={styles.space} />
             <TouchableOpacity onPress={() => setAlertModalVisible(true)}>
@@ -85,11 +85,11 @@ export function Help() {
             <Text style={styles.modalText}>Você gostou?</Text>
             <View style={styles.feedbackButtons}>
               <TouchableOpacity onPress={() => { console.log('Gostei'); setFeedbackModalVisible(false); }}>
-                <AntDesign name="like1" size={32} color="green" />
+                <AntDesign name="like1" size={32} color="#000" />
               </TouchableOpacity>
               <View style={styles.space} />
               <TouchableOpacity onPress={() => { console.log('Não gostei'); setFeedbackModalVisible(false); }}>
-                <AntDesign name="dislike1" size={32} color="red" />
+                <AntDesign name="dislike1" size={32} color="#000" />
               </TouchableOpacity>
             </View>
             <Pressable
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     justifyContent: "flex-start",
-    alignItems: "baseline",
+    alignItems: "center",
     flexDirection: "column",
     backgroundColor: "white",
   },
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     margin: 20,
   },
