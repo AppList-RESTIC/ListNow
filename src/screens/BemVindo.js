@@ -34,10 +34,11 @@ export function BemVindo({ navigation }) {
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 116,
+        paddingTop: '10%',
         flex: 1,
         backgroundColor: '#292929',
         alignItems: 'center',
+        justifyContent: 'center'
     },
     content: {
         alignItems: 'center',      // Alinha os itens dentro da View centralizada
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
 
     AppName: {
         fontSize: 32,
-        marginBottom: 20,
+        marginBottom: '5%',
         color: 'white',
         textAlign: "center",
     },
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     },
     logo: {
         width: 200,  // Largura da imagem
-        height: 200, // Altura da imagem
+        height: '8em', // Altura da imagem
         resizeMode: 'contain',  // Ajusta a imagem dentro do tamanho definido
         marginTop: 38,
     },
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     startBtn: {
         width: '60%',
         padding: 16,
-        marginTop: 24,
+        marginTop: '0.625rem',
         borderRadius: 24,
         borderWidth: 2,
         backgroundColor: '#ECE653',

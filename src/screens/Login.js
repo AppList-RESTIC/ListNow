@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     backgroundColor: "#292929",
-    paddingTop: 164,
+    paddingTop: '5%',
   },
   titulo: {
     color: "#ffff",
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
 
   form:{
-    marginTop: 56,
+    marginTop: '2.5em',
     gap:86,
     marginBottom: 120,
   },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent:'space-between',
-    marginBottom: 16,
+    marginBottom: '0.525em',
     padding: 8,
     borderColor: "#A5A5A5",
     backgroundColor: "transparent",

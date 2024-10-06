@@ -208,6 +208,7 @@ const styles = StyleSheet.create({
     alignItems:'center',
     marginTop: 60,
     width:'100%',
+    maxWidth: '100%'
   },
   filterButton: {
     height:150,
@@ -231,6 +232,6 @@ const styles = StyleSheet.create({
   addTaskButton: {
     position: 'absolute',  
     right: 30,
-    bottom: '5%',
+    bottom: '6%',
   },
 });
