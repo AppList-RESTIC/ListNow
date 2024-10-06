@@ -1,19 +1,18 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Importar AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 import { AntDesign } from '@expo/vector-icons';
 import { AuthContext } from "../contexts/auth";
 import { TaskItem } from '../components/TaskItem'; 
 import { TextInput } from 'react-native-gesture-handler';
+import moment from 'moment'; 
 
-export function Home() {
-  const { user, logout } = useContext(AuthContext);
-  
-  // Estado para controlar a lista de tarefas
+export function Home({ navigation, route }) {  
+  const { user } = useContext(AuthContext);
   const [tasks, setTasks] = useState([]);
   const [text, setText] = useState('');
+  const [todayDate] = useState(moment().format('DD/MM/YYYY')); 
 
-  // Função para carregar tarefas do armazenamento local
   useEffect(() => {
     async function loadTasks() {
       try {
@@ -25,71 +24,109 @@ export function Home() {
         Alert.alert('Erro ao carregar tarefas');
       }
     }
-
     loadTasks();
   }, []);
 
-  // Função para salvar tarefas no armazenamento local
   useEffect(() => {
-    async function saveTasks() {
-      try {
-        await AsyncStorage.setItem(`tasks_${user?.email}`, JSON.stringify(tasks));
-      } catch (error) {
-        Alert.alert('Erro ao salvar tarefas');
-      }
-    }
-
     if (tasks.length > 0) {
-      saveTasks();
+      saveTasksToStorage(tasks);
     }
   }, [tasks]);
 
-  // Função para adicionar nova tarefa
-  function addTask() {
-    if (text) {
-      setTasks([...tasks, { id: Date.now().toString(), text, isFavorite: false }]);
-      setText(''); // Limpa o input
+  async function saveTasksToStorage(updatedTasks) {
+    try {
+      await AsyncStorage.setItem(`tasks_${user?.email}`, JSON.stringify(updatedTasks));
+    } catch (error) {
+      Alert.alert('Erro ao salvar tarefas');
     }
   }
 
-  // Função para marcar como favorito
+  useEffect(() => {
+    if (route.params?.newTask) {  
+      const updatedTasks = [...tasks, route.params.newTask];
+      setTasks(updatedTasks);
+      saveTasksToStorage(updatedTasks);
+    }
+  }, [route.params?.newTask]);
+
   function handleFavorite(id) {
     setTasks(tasks.map(task => 
       task.id === id ? { ...task, isFavorite: !task.isFavorite } : task
     ));
   }
 
-  // Função para deletar tarefa
   function handleDelete(id) {
-    setTasks(tasks.filter(task => task.id !== id));
+    const updatedTasks = tasks.filter(task => task.id !== id);
+    setTasks(updatedTasks);
+    saveTasksToStorage(updatedTasks);
   }
+
+  function handleFilterTasks(filter) {
+    navigation.navigate('FilteredTasks', { 
+      filter, 
+      tasks, 
+      onDelete: handleDelete,
+      onFavorite: handleFavorite,
+      user: user 
+    });
+  }
+
+  const todayTasks = tasks.filter(task => 
+    task.date === todayDate && task.name.includes(text)
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.WelcomeView}>
-        <Text style={styles.titleLargue}>Seja bem-vindo, {user?.email}!</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.titleLargue}>Seja bem-vindo, {user?.email}!</Text>
+          <TouchableOpacity style={styles.helpIcon} onPress={() => navigation.navigate('Help')}>
+            <AntDesign name="questioncircleo" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
 
-        {/* Input com lupa */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={text}
             onChangeText={setText}
-            placeholder="Digite aqui"
+            placeholder="Filtrar tarefas"
             placeholderTextColor="#aaa"
           />
-          <TouchableOpacity style={styles.iconContainer} onPress={addTask}>
-            <AntDesign name="pluscircle" size={24} color="#292929" />
-          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Lista de tarefas */}
+      <View style={styles.filterButtonsContainer}>
+        <TouchableOpacity 
+          style={styles.filterButton} 
+          onPress={() => handleFilterTasks('open')}
+        >
+          <Text style={styles.buttonText}>Tarefas em Aberto</Text>
+          <AntDesign  name="edit" size={26} color="#292929 " style={styles.filterButtonsIco} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.filterButton} 
+          onPress={() => handleFilterTasks('completed')}
+        >
+          <Text style={styles.buttonText}>Tarefas Concluídas</Text>
+          <AntDesign  name="check" size={26} color="#292929 " style={styles.filterButtonsIco} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.filterButton} 
+          onPress={() => handleFilterTasks('total')}
+        >
+          <Text style={styles.buttonText}>Tarefas Totais</Text>
+          <AntDesign  name="earth" size={26} color="#292929 " style={styles.filterButtonsIco} />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.menuTasks}>
-        <Text style={styles.titleMedium}>Tasks do Dia</Text>
-        
+        <Text style={styles.titleMedium}>Tasks do Dia - {todayDate}</Text>
+
         <FlatList
-          data={tasks}
+          data={todayTasks}  
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <TaskItem 
@@ -98,8 +135,14 @@ export function Home() {
               onDelete={handleDelete} 
             />
           )}
+          showsVerticalScrollIndicator={true}
+          style={styles.taskList}
         />
       </View>
+
+      <TouchableOpacity style={styles.addTaskButton} onPress={() => navigation.navigate('AddTask')}>
+        <AntDesign name="pluscircle" size={50} color="#292929" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -112,13 +155,15 @@ const styles = StyleSheet.create({
   menuTasks: {
     flex: 1,
     width: '100%',
-    marginTop: '70%',
+    marginTop: 100,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     justifyContent: 'flex-start',
-    flexDirection: 'column',
     backgroundColor: 'white',
-    padding: 32,
+    padding: 16,
+  },
+  taskList: {
+    flexGrow: 1,
   },
   WelcomeView: {
     marginTop: 80,
@@ -134,6 +179,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#000000',
+  },
+  headerContainer: {
+    marginRight: '5%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -151,7 +202,35 @@ const styles = StyleSheet.create({
     height: 40,
     color: '#000',
   },
-  iconContainer: {
-    padding: 8,
+  filterButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems:'center',
+    marginTop: 60,
+    width:'100%',
+  },
+  filterButton: {
+    height:150,
+    width:120,
+    backgroundColor: '#D6DCD7',
+    padding: 10,
+    borderRadius: 5,
+    textAlign: 'center',
+    justifyContent:'center',
+    alignItems: 'center',
+  },
+  filterButtonsIco:{
+    marginTop: 10,
+  },
+  buttonText: {
+    textAlign: 'center',
+    color: '#292929',
+    fontSize: 16,
+    fontWeight:'bold',
+  },
+  addTaskButton: {
+    position: 'absolute',  
+    right: 30,
+    bottom: '5%',
   },
 });
