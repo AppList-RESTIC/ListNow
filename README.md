@@ -23,7 +23,7 @@ Antes de executar o aplicativo, certifique-se de ter o seguinte instalado:
 ````
 2.Navegue até o diretório do projeto:
  ````
-   git clone https://github.com/seuusuario/ListNow.git
+   cd ListNow
  ````
 3.Instale as dependências:
 
