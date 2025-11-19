@@ -14,7 +14,7 @@ export function AddTask({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState(null); // Estado para categoria selecionada
 
   async function handleAddTask() {
-    if (!taskName || !taskDate || !taskDetails || !selectedCategory) {
+    if (!taskName || !taskDate || !taskDetails) {
       Alert.alert('Por favor, preencha todos os campos');
       return;
     }
